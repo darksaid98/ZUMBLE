@@ -14,7 +14,10 @@ WORKDIR /zumble-build
 
 RUN openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout /key.pem -out /cert.pem -subj "/C=FR/ST=Paris/L=Paris/O=SoZ/CN=soz.zerator.com"
 
-RUN cargo build --release --target x86_64-unknown-linux-musl && cp target/x86_64-unknown-linux-musl/release/zumble /zumble
+RUN --mount=type=cache,target=/usr/local/cargo,from=rust,source=/usr/local/cargo \
+    --mount=type=cache,target=target \
+    cargo build --release --target x86_64-unknown-linux-musl \
+    && cp target/x86_64-unknown-linux-musl/release/zumble /zumble
 
 ## launching
 FROM debian:buster-slim
@@ -37,11 +40,9 @@ EXPOSE 8080/tcp
 
 ENV RUST_LOG=info
 
-RUN cp /zumble /home/container/zumble
-
 ## update base packages
 RUN apt update \
- && apt upgrade -y
+    && apt upgrade -y
 
 ## install dependencies
 RUN apt install -y iproute2
