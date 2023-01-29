@@ -16,7 +16,13 @@ RUN --mount=type=cache,target=/usr/local/cargo,from=rust,source=/usr/local/cargo
     --mount=type=cache,target=target \
     cargo build --release --target x86_64-unknown-linux-musl && cp target/x86_64-unknown-linux-musl/release/zumble /zumble
 
-FROM scratch
+FROM debian:buster-slim
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN useradd -m -d /home/container -s /bin/bash container
+RUN ln -s /home/container/ /nonexistent
+ENV USER=container HOME=/home/container
 
 COPY --from=builder /zumble /zumble
 COPY --from=builder /cert.pem /cert.pem
@@ -28,4 +34,7 @@ EXPOSE 8080/tcp
 
 ENV RUST_LOG=info
 
-CMD ["/zumble", "--http-password", "changeme"]
+WORKDIR /home/container
+
+COPY  ./entrypoint.sh /entrypoint.sh
+CMD   ["/bin/bash", "/entrypoint.sh"]
