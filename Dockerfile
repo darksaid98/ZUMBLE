@@ -18,15 +18,34 @@ RUN cargo build --release --target x86_64-unknown-linux-musl \
     && cp target/x86_64-unknown-linux-musl/release/zumble /zumble
 
 ## launching
-FROM scratch
+FROM debian:buster-slim
+
+ENV DEBIAN_FRONTEND noninteractive
+
+## add container user
+RUN useradd -m -d /home/container -s /bin/bash container
+RUN ln -s /home/container/ /nonexistent
+ENV USER=container HOME=/home/container
 
 ## import built files
-COPY --from=builder /zumble /zumble
-COPY --from=builder /cert.pem /cert.pem
-COPY --from=builder /key.pem /key.pem
+COPY --from=builder /zumble /home/container/zumble
+COPY --from=builder /cert.pem /home/container/cert.pem
+COPY --from=builder /key.pem /home/container/key.pem
 
 EXPOSE 64738/udp
 EXPOSE 64738/tcp
 EXPOSE 8080/tcp
 
-ENV RUST_LOG=inf
+ENV RUST_LOG=info
+
+## update base packages
+RUN apt update \
+    && apt upgrade -y
+
+## install dependencies
+RUN apt install -y iproute2
+
+WORKDIR /home/container
+
+COPY ./entrypoint.sh /entrypoint.sh
+CMD ["/bin/bash", "/entrypoint.sh"]
