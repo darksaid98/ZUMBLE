@@ -28,9 +28,9 @@ RUN ln -s /home/container/ /nonexistent
 ENV USER=container HOME=/home/container
 
 ## import built files
-COPY --from=builder /zumble /zumble
-COPY --from=builder /cert.pem /cert.pem
-COPY --from=builder /key.pem /key.pem
+COPY --from=builder /zumble /home/container/zumble
+COPY --from=builder /cert.pem /home/container/cert.pem
+COPY --from=builder /key.pem /home/container/key.pem
 
 EXPOSE 64738/udp
 EXPOSE 64738/tcp
