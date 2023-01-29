@@ -39,6 +39,13 @@ ENV RUST_LOG=info
 
 RUN cp /zumble /home/container/zumble
 
+## update base packages
+RUN apt update \
+ && apt upgrade -y
+
+## install dependencies
+RUN apt install -y iproute2
+
 WORKDIR /home/container
 
 COPY ./entrypoint.sh /entrypoint.sh
